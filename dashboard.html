@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GAS SENSOR DASHBOARD</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        html, body {
+             margin: 0;
+             padding: 0;
+             width: 100%;
+             min-height: 100%;
+             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+             overflow-y: auto;
+             overflow-x: hidden;
+             background: linear-gradient(135deg, #040007, #1a001f);
+             color: #fff;
+             transition: background 0.5s, color 0.5s;
+         }
+
+        body.light-mode {
+            background: linear-gradient(135deg, #f5f5f5, #dcdcdc);
+            color: #000;
+        }
+        h1 {
+            text-align: center;
+            margin: 10px 0;
+            font-size: 3em;
+        }
+        #toggleMode {
+            display: block;
+            margin: 10px auto;
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2em;
+            background: #444;
+            color: #fff;
+        }
+        body.light-mode #toggleMode {
+            background: #888;
+            color: #000;
+        }
+        #alertBox {
+            display: none;
+            font-weight: bold;
+            text-align: center;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        #latestCard {
+            width: 400px;
+            margin: 0 auto 20px auto;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.4);
+            text-align: center;
+            font-weight: bold;
+            transition: all 0.5s;
+            font-size: 1.5em;
+        }
+        #latestCard h2 {
+            font-size: 4em;
+            margin: 0;
+        }
+        .chart-container {
+            width: 95%;
+            height: 50%;
+            margin: auto;
+            transition: background 0.5s;
+        }
+        body.light-mode .chart-container {
+            background: rgba(255,255,255,0.7);
+        }
+        body.dark-mode .chart-container {
+            background: rgba(0,0,0,0.1);
+        }
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        #bottomCards {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-top: 20px;
+        }
+        .card {
+            width: 200px;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.5em;
+            transition: background 0.5s, color 0.5s;
+        }
+        .card h2 {
+            font-size: 2.5em;
+            margin: 0;
+        }
+
+        /* Corrected CSS for light/dark mode text and cards */
+        body.light-mode h1,
+        body.light-mode h2,
+        body.light-mode p,
+        body.light-mode li,
+        body.light-mode strong {
+            color: #222 !important;
+        }
+
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode p,
+        body.dark-mode li,
+        body.dark-mode strong {
+            color: #fff !important;
+        }
+
+        body.light-mode .card,
+        body.light-mode #latestCard {
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+        }
+
+        body.dark-mode .card,
+        body.dark-mode #latestCard {
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+        }
+
+        body.light-mode #infoSection,
+        body.light-mode #mapSection,
+        body.light-mode #factsSection {
+            background: rgba(255, 255, 255, 0.7);
+            color: #000;
+        }
+
+        body.dark-mode #infoSection,
+        body.dark-mode #mapSection,
+        body.dark-mode #factsSection {
+            background: rgba(0, 0, 0, 0.2);
+            color: #fff;
+        }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <!-- Highlighted Project Title -->
+    <div style="text-align:center; margin-top:20px;">
+        <div style="display:inline-block; padding:15px 40px; border-radius:20px;
+            background:linear-gradient(135deg, #5a2d0c, #b86b33); color:#fff;
+            box-shadow:0 4px 15px rgba(0,0,0,0.3); font-size:3em; font-weight:bold; text-transform:uppercase;">
+            AIR AWARE
+        </div>
+    </div>
+
+    <p style="text-align: center; max-width: 800px; margin: 10px auto 30px auto; font-size: 1.2em; line-height: 1.5;">
+        Air Aware is a real-time gas monitoring dashboard that tracks and visualizes air quality data from IoT sensors.
+        It helps detect hazardous gas levels and alerts users instantly to maintain safe industrial and environmental conditions.
+    </p>
+
+    <h1>GAS SENSOR DASHBOARD</h1>
+    <button id="toggleMode">Toggle Light/Dark Mode</button>
+
+    <!-- Added Threshold Button -->
+    <button id="setThreshold" style="display:block;margin:10px auto;padding:12px 20px;border-radius:12px;border:none;cursor:pointer;font-weight:bold;font-size:1.2em;background:#555;color:#fff;">
+        Set Threshold Value
+    </button>
+
+    <div id="alertBox">⚠️ Gas Level High!</div>
+
+    <div id="latestCard"> 
+        <h2 id="gasValue">--</h2>
+        <p>Latest Gas (PPM)</p>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="gasChart"></canvas>
+    </div>
+
+    <div id="bottomCards">
+        <div class="card" id="minCard">
+            <h2 id="gasMin">--</h2>
+            <p>Min (Last Hour)</p>
+        </div>
+        <div class="card" id="maxCard">
+            <h2 id="gasMax">--</h2>
+            <p>Max (Last Hour)</p>
+        </div>
+        <div class="card" id="avgCard">
+            <h2 id="gasAvg">--</h2>
+            <p>Avg (Last Hour)</p>
+        </div>
+    </div>
+
+    <!-- Status, Helpline & Tips Section -->
+    <div id="infoSection" style="width:90%;margin:40px auto;padding:20px;border-radius:20px;
+    background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);box-shadow:0 4px 25px rgba(0,0,0,0.2);color:#fff;">
+        <h2 style="text-align:center;margin-bottom:15px;">System Status & Environmental Support</h2>
+        <p style="font-size:1.2em;text-align:center;">
+            <strong>Status:</strong> No alert email sent currently.
+        </p>
+        <hr style="border:1px solid rgba(255,255,255,0.3);margin:15px 0;">
+        <p style="font-size:1.2em;text-align:center;">
+            <strong>Helpline Numbers:</strong><br>
+            National Pollution Control Board: 1800-111-222<br>
+            Local Environmental Helpline: 1800-333-444
+        </p>
+        <hr style="border:1px solid rgba(255,255,255,0.3);margin:15px 0;">
+        <div style="font-size:1.1em;">
+            <strong>Tips to Control Industrial Pollution:</strong>
+            <ul style="line-height:1.6;">
+                <li>Install proper air filtration and exhaust systems in factories.</li>
+                <li>Switch to cleaner fuels and renewable energy sources.</li>
+                <li>Regularly maintain machinery to reduce emissions.</li>
+                <li>Adopt waste recycling and safe disposal practices.</li>
+                <li>Ensure proper training for workers on pollution prevention.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Did You Know Section -->
+    <div id="factsSection" style="width:90%;margin:40px auto;padding:20px;border-radius:20px;
+    background:rgba(139,69,19,0.15);backdrop-filter:blur(10px);box-shadow:0 4px 25px rgba(0,0,0,0.2);color:#fff;text-align:center;">
+        <h2>Did You Know?</h2>
+        <p id="factText" style="font-size:1.3em;margin-top:15px;">Loading fact...</p>
+    </div>
+
+    <audio id="alertSound">
+        <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+    </audio>
+
+    <script>
+        const THINGSPEAK_CHANNEL_ID = '3101976';
+        const THINGSPEAK_API_KEY = 'MWYUJB5F2YZ082S1';
+        const UPDATE_INTERVAL = 15000;
+        const GAS_LIMITS = { GOOD: 600, MODERATE: 1200 };
+        const MAX_ENTRIES = 240;
+
+        const gasValueEl = document.getElementById('gasValue');
+        const latestCard = document.getElementById('latestCard');
+        const minCard = document.getElementById('gasMin');
+        const maxCard = document.getElementById('gasMax');
+        const avgCard = document.getElementById('gasAvg');
+        const alertBox = document.getElementById('alertBox');
+        const alertSound = document.getElementById('alertSound');
+        const toggleMode = document.getElementById('toggleMode');
+
+        let gasChart;
+        let gasDataHistory = [];
+
+        // ---- Light/Dark Mode Toggle ----
+        toggleMode.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            document.body.classList.toggle('dark-mode');
+        });
+
+        // ---- Custom Threshold Button ----
+        const setThresholdBtn = document.getElementById('setThreshold');
+        setThresholdBtn.addEventListener('click', () => {
+            const newLimit = prompt("Enter new alert threshold value (PPM):", GAS_LIMITS.MODERATE);
+            if (newLimit && !isNaN(newLimit)) {
+                GAS_LIMITS.MODERATE = parseInt(newLimit);
+                alert(`New alert threshold set to ${GAS_LIMITS.MODERATE} PPM`);
+            }
+        });
+
+        async function fetchGasData() {
+            try {
+                const response = await fetch(`https://api.thingspeak.com/channels/${THINGSPEAK_CHANNEL_ID}/feeds.json?api_key=${THINGSPEAK_API_KEY}&results=${MAX_ENTRIES}`);
+                const data = await response.json();
+                const feeds = data.feeds;
+
+                const timestamps = feeds.map(feed => new Date(feed.created_at).toLocaleTimeString());
+                const gasValues = feeds.map(feed => parseInt(feed.field1));
+
+                gasDataHistory = gasValues.slice(-MAX_ENTRIES);
+
+                const validVals = gasDataHistory.filter(v => !isNaN(v));
+                const minVal = Math.min(...validVals);
+                const maxVal = Math.max(...validVals);
+                const avgVal = Math.round(validVals.reduce((a,b)=>a+b,0)/validVals.length);
+
+                minCard.textContent = minVal;
+                maxCard.textContent = maxVal;
+                avgCard.textContent = avgVal;
+
+                const latestGas = validVals[validVals.length-1] || 0;
+                gasValueEl.textContent = latestGas;
+
+                if(latestGas <= GAS_LIMITS.GOOD){
+                    latestCard.style.background = "linear-gradient(135deg, #28a745, #1c7c31)";
+                    alertBox.style.display = "none";
+                } else if(latestGas <= GAS_LIMITS.MODERATE){
+                    latestCard.style.background = "linear-gradient(135deg, #ffc107, #d39e00)";
+                    alertBox.style.display = "none";
+                } else {
+                    latestCard.style.background = "linear-gradient(135deg, #e74c3c, #c82333)";
+                    alertBox.style.display = "block";
+                    let beepCount = 0;
+                    const beepInterval = setInterval(()=>{
+                        alertSound.play();
+                        beepCount++;
+                        if(beepCount>=5){ clearInterval(beepInterval); }
+                    },1000);
+                }
+
+                updateChart(timestamps, gasValues);
+            } catch(err){
+                console.error("Error fetching ThingSpeak data:", err);
+            }
+        }
+
+        function updateChart(labels, data){
+            if(!gasChart){
+                const ctx = document.getElementById('gasChart').getContext('2d');
+                gasChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Gas Sensor (PPM)',
+                            data: data,
+                            backgroundColor: data.map(v=> 
+                                v <= GAS_LIMITS.GOOD ? '#28a745' :
+                                v <= GAS_LIMITS.MODERATE ? '#ffc107' : '#e74c3c'
+                            )
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        animation: false,
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: {
+                                titleFont: { size: 20 },
+                                bodyFont: { size: 20 }
+                            }
+                        },
+                        scales: {
+                            x: { 
+                                beginAtZero: true, 
+                                title: { display: true, text: 'Gas Value (PPM)', font: { size:22 } },
+                                ticks: { font:{size:18} } 
+                            },
+                            y: { 
+                                title: { display: true, text: 'Time', font:{size:22} }, 
+                                ticks: { font:{size:18} } 
+                            }
+                        }
+                    }
+                });
+            } else {
+                gasChart.data.labels = labels;
+                gasChart.data.datasets[0].data = data;
+                gasChart.data.datasets[0].backgroundColor = data.map(v=> 
+                    v <= GAS_LIMITS.GOOD ? '#28a745' :
+                    v <= GAS_LIMITS.MODERATE ? '#ffc107' : '#e74c3c'
+                );
+                gasChart.update();
+            }
+        }
+
+        fetchGasData();
+        setInterval(fetchGasData, UPDATE_INTERVAL);
+
+        // ---- Did You Know Rotating Facts ----
+        const facts = [
+            "One cement plant emits more CO₂ in a day than 10,000 cars.",
+            "Switching to LED lights in factories can cut energy use by 40%.",
+            "Industrial waste treatment can reduce pollution by over 60%.",
+            "Recycling one ton of paper saves 17 trees and 7,000 gallons of water."
+        ];
+        let factIndex = 0;
+        const factText = document.getElementById('factText');
+        function rotateFacts() {
+            factText.textContent = facts[factIndex];
+            factIndex = (factIndex + 1) % facts.length;
+        }
+        rotateFacts();
+        setInterval(rotateFacts, 6000);
+    </script>
+</body>
+</html>
