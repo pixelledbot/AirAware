@@ -33,15 +33,15 @@ ax.legend()
 ax.grid(True)
 
 # ---------------- ThingSpeak Setup ----------------
-THINGSPEAK_API_KEY = 'W3O05QU6TR06OEOA'
+THINGSPEAK_API_KEY = 'YOUR_THINGSPEAK_API_KEY'
 THINGSPEAK_URL = 'https://api.thingspeak.com/update'
 
 # ---------------- Email Setup ----------------
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 465
-EMAIL_USER = 'zoyasubedi04@gmail.com'
-EMAIL_APP_PASSWORD = 'kuro alzt eozz ulcy'
-EMAIL_RECEIVER = 'simran2315222@gmail.com'
+EMAIL_USER = 'your_email@example.com'
+EMAIL_APP_PASSWORD = 'your_app_password'
+EMAIL_RECEIVER = 'receiver_email@example.com'
 
 # ---------------- Gas Threshold ----------------
 THRESHOLD = 800
