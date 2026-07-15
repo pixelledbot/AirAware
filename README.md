@@ -11,13 +11,13 @@ It includes:
 
 ## Project Files
 
-- `/home/runner/work/AirAware/AirAware/import_data.py`  
+- `import_data.py`  
   Simulates gas sensor readings, stores timestamped values in `gas_sensor_data.csv`, sends data to ThingSpeak, and triggers email alerts when readings cross the threshold.
 
-- `/home/runner/work/AirAware/AirAware/data_clean.py`  
+- `data_clean.py`  
   Cleans raw readings by removing invalid/outlier values and applies moving-average smoothing, then writes output to `gas_sensor_cleaned.csv`.
 
-- `/home/runner/work/AirAware/AirAware/dashboard.html`  
+- `dashboard.html`  
   Frontend dashboard using Chart.js to fetch ThingSpeak data and display current value, min/max/avg stats, alert state, and historical trends.
 
 ## Workflow
