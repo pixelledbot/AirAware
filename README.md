@@ -28,8 +28,8 @@ It includes:
 
 ## Notes
 
-- The current scripts use hardcoded API/email credentials for demo purposes.  
-  For production use, move secrets to environment variables.
+- The current scripts include generic placeholder API/email credentials.  
+  Replace them with your own values, and use environment variables for production.
 - CSV files expected/generated:
   - `gas_sensor_data.csv`
   - `gas_sensor_cleaned.csv`
